@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubReconX Assessment Report — {{ summary.domain }}</title>
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --card-bg: #0d1525;
+      --card-border: #1a2744;
+      --accent: #00ff88;
+      --accent-dim: rgba(0, 255, 136, 0.15);
+      --text-main: #f0f4fc;
+      --text-muted: #8899aa;
+      --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      --font-mono: Consolas, 'SF Mono', Menlo, Monaco, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .brand h1 {
+      font-size: 2.2rem;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .brand h1 span { color: var(--accent); }
+    .brand p { color: var(--text-muted); font-size: 0.95rem; }
+    .report-meta { text-align: right; font-size: 0.85rem; color: var(--text-muted); }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .card-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .card-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    .metadata-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+    .meta-item strong { color: var(--accent); display: block; font-size: 0.8rem; text-transform: uppercase; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      margin-bottom: 2rem;
+    }
+    th, td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.9rem;
+    }
+    th {
+      background: #101c33;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+    tr:hover { background: rgba(0, 255, 136, 0.03); }
+    .hostname { font-family: var(--font-mono); font-weight: 600; color: #fff; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .status-ok { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
+    .status-redirect { background: rgba(0, 150, 255, 0.15); color: #00aaff; border: 1px solid rgba(0, 150, 255, 0.3); }
+    .status-client-err { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
+    .status-server-err { background: rgba(255, 68, 68, 0.15); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3); }
+    .status-unknown { background: #1a2744; color: var(--text-muted); }
+    
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .tag {
+      background: #142036;
+      color: #9ab4d0;
+      border: 1px solid #1f3354;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>Sub<span>Recon</span>X</h1>
+        <p>Attack Surface & Subdomain Discovery Report</p>
+      </div>
+      <div class="report-meta">
+        <div><strong>Scan ID:</strong> {{ summary.scan_id }}</div>
+        <div><strong>Generated:</strong> {{ generated_at }}</div>
+      </div>
+    </header>
+
+    <div class="metadata-box">
+      <div class="meta-item">
+        <strong>Target Domain</strong>
+        <span>{{ summary.domain }}</span>
+      </div>
+      <div class="meta-item">
+        <strong>Assessment Status</strong>
+        <span class="badge status-ok">{{ summary.status.value if summary.status else 'completed' }}</span>
+      </div>
+      <div class="meta-item">
+        <strong>Started At</strong>
+        <span>{{ summary.started_at.strftime('%Y-%m-%d %H:%M:%S UTC') if summary.started_at else '—' }}</span>
+      </div>
+      <div class="meta-item">
+        <strong>Duration</strong>
+        <span>{{ "%.2f s" % summary.duration_seconds if summary.duration_seconds else '—' }}</span>
+      </div>
+    </div>
+
+    <div class="grid-stats">
+      <div class="card">
+        <div class="card-title">Total Discovered</div>
+        <div class="card-value">{{ total_subdomains }}</div>
+        <div class="card-sub">Unique subdomains</div>
+      </div>
+      <div class="card">
+        <div class="card-title">DNS Resolved</div>
+        <div class="card-value">{{ dns_resolved }}</div>
+        <div class="card-sub">Active in DNS (A / AAAA / CNAME)</div>
+      </div>
+      <div class="card">
+        <div class="card-title">DNS Unresolved</div>
+        <div class="card-value" style="color: #ffaa00;">{{ dns_unresolved }}</div>
+        <div class="card-sub">No matching DNS records</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Live HTTP/S Services</div>
+        <div class="card-value" style="color: #00ccff;">{{ http_live }}</div>
+        <div class="card-sub">Responding web endpoints</div>
+      </div>
+    </div>
+
+    <h2 style="margin-bottom: 1rem; font-size: 1.3rem;">Discovered Attack Surface Assets</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Hostname</th>
+          <th>Source</th>
+          <th>DNS Resolution</th>
+          <th>DNS Records</th>
+          <th>HTTP</th>
+          <th>HTTPS</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="hostname">{{ row.hostname }}</td>
+          <td><span class="tag">{{ row.source }}</span></td>
+          <td>
+            {% if row.dns_resolved is sameas true %}
+              <span class="badge status-ok">RESOLVED</span>
+            {% elif row.dns_resolved is sameas false %}
+              <span class="badge status-client-err">UNRESOLVED</span>
+            {% else %}
+              <span class="badge status-unknown">—</span>
+            {% endif %}
+          </td>
+          <td style="font-family: var(--font-mono); font-size: 0.8rem; max-width: 300px; word-break: break-all;">
+            {{ row.dns_records }}
+          </td>
+          <td><span class="badge {{ row.http_class }}">{{ row.http_status }}</span></td>
+          <td><span class="badge {{ row.https_class }}">{{ row.https_status }}</span></td>
+          <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ row.response_time }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            No subdomains discovered during this assessment.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <footer>
+      <p>Report generated by SubReconX • Authorized security assessments only.</p>
+    </footer>
+  </div>
+</body>
+</html>

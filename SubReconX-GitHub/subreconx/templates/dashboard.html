@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ app_name }} — Attack Surface Mapping & Subdomain Discovery</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <a href="/" class="brand-logo">Sub<span>Recon</span>X</a>
+      <span class="brand-badge">v{{ version }}</span>
+    </div>
+    <div class="header-status">
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span>Engine Ready</span>
+      </div>
+      <a href="/docs" target="_blank" class="btn-header">API Docs (Swagger)</a>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <main class="main-layout">
+    <!-- Left Sidebar: Configuration & Scan History -->
+    <aside class="sidebar">
+      <!-- Scan Configuration Panel -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span>✦</span> Target Scope</div>
+        </div>
+
+        <div class="form-group">
+          <label for="target-domain" class="form-label">Target Domain</label>
+          <input 
+            type="text" 
+            id="target-domain" 
+            class="form-input" 
+            placeholder="e.g. example.com"
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </div>
+
+        <div class="scope-preview" id="scope-text">
+          Enter target domain to preview scope authorization.
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-dns" checked>
+            <span>DNS Resolution (A, AAAA, CNAME)</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-http">
+            <span>HTTP/HTTPS Availability Probe</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-subfinder" checked>
+            <span>ProjectDiscovery Subfinder</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-amass">
+            <span>OWASP Amass (Optional)</span>
+          </label>
+        </div>
+
+        <button id="btn-start-scan" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Execute Assessment
+        </button>
+
+        <button id="btn-cancel-scan" class="btn-danger" style="display: none;">
+          Cancel In-Progress Scan
+        </button>
+      </section>
+
+      <!-- Scan History Panel -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span>⟐</span> Recent Assessments</div>
+        </div>
+        <div class="history-list" id="history-list">
+          <div style="color: var(--text-muted); font-size: 0.8rem;">Loading past scans...</div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Right Content View: Metrics, Live Progress & Data Table -->
+    <div class="content-view">
+      <!-- Active Scan Progress Card -->
+      <div class="progress-card" id="progress-card">
+        <div class="progress-header">
+          <span class="progress-phase" id="progress-phase">Initiating...</span>
+          <span style="font-family: var(--font-mono); color: var(--text-muted);" id="elapsed-time">0s</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Metric Cards Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Discovered</div>
+          <div class="stat-number green" id="stat-total">0</div>
+          <div class="stat-sub">Normalized unique subdomains</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">DNS Resolved</div>
+          <div class="stat-number blue" id="stat-resolved">0</div>
+          <div class="stat-sub">Active hostnames with IP</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Live Web Endpoints</div>
+          <div class="stat-number green" id="stat-http">0</div>
+          <div class="stat-sub">HTTP/HTTPS responsive</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Warnings / Anomalies</div>
+          <div class="stat-number yellow" id="stat-warnings">0</div>
+          <div class="stat-sub">Wildcards or tool alerts</div>
+        </div>
+      </div>
+
+      <!-- Results Toolbar (Search & Export) -->
+      <div class="results-toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Search subdomains by hostname or prefix..."
+          >
+        </div>
+
+        <div class="toolbar-actions">
+          <a id="export-csv" href="#" target="_blank" class="btn-export">
+            <span>📥 CSV</span>
+          </a>
+          <a id="export-json" href="#" target="_blank" class="btn-export">
+            <span>📥 JSON</span>
+          </a>
+          <a id="export-html" href="#" target="_blank" class="btn-export">
+            <span>📊 HTML Report</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Results Data Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable" data-sort="hostname">Hostname ⬍</th>
+              <th class="sortable" data-sort="source">Source ⬍</th>
+              <th>DNS Status</th>
+              <th>DNS Records</th>
+              <th>HTTP</th>
+              <th>HTTPS</th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                No scan active. Enter an authorized target domain on the left and click "Execute Assessment".
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Table Pagination -->
+        <div class="pagination-wrapper">
+          <div id="pagination-info">Showing 0 entries</div>
+          <div class="pagination-controls">
+            <button id="btn-prev" class="btn-page" disabled>Previous</button>
+            <button id="btn-next" class="btn-page" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>
+      <strong>SubReconX</strong> — Engineered for authorized penetration testing, security research, and attack surface discovery.<br>
+      Strict scope controls enforced. Unsolicited scanning of unauthorized infrastructure is strictly prohibited.
+    </p>
+  </footer>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
